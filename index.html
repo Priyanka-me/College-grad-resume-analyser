@@ -1,0 +1,776 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>ATS Resume Analyzer</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:#f4f7fb;
+    padding:30px;
+    color:#222;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    border-radius:24px;
+    padding:35px;
+    box-shadow:0 10px 35px rgba(0,0,0,0.08);
+}
+
+h1{
+    font-size:38px;
+    color:#1d3557;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:#666;
+    margin-bottom:30px;
+}
+
+.input-group{
+    margin-bottom:22px;
+}
+
+label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:600;
+}
+
+input,
+textarea{
+    width:100%;
+    padding:15px;
+    border-radius:14px;
+    border:1px solid #d6dce7;
+    font-size:15px;
+    font-family:'Poppins',sans-serif;
+}
+
+textarea{
+    min-height:180px;
+    resize:vertical;
+}
+
+button{
+    border:none;
+    background:#2563eb;
+    color:white;
+    padding:15px 28px;
+    border-radius:14px;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#1849b8;
+}
+
+.result-card{
+    display:none;
+    margin-top:35px;
+    background:white;
+    border-radius:24px;
+    padding:35px;
+    box-shadow:0 10px 35px rgba(0,0,0,0.08);
+}
+
+.score-box{
+    background:#eff6ff;
+    border-radius:20px;
+    padding:30px;
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.score{
+    font-size:64px;
+    font-weight:700;
+    color:#2563eb;
+}
+
+.section{
+    margin-bottom:30px;
+}
+
+.section h3{
+    color:#1d3557;
+    margin-bottom:12px;
+}
+
+.tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.tag{
+    padding:8px 14px;
+    border-radius:30px;
+    font-size:14px;
+    font-weight:500;
+}
+
+.matched{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.missing{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+ul{
+    padding-left:22px;
+}
+
+li{
+    margin-bottom:8px;
+}
+
+.download-btn{
+    background:#16a34a;
+}
+
+.download-btn:hover{
+    background:#0f7c37;
+}
+
+.sample-btn{
+    background:#9333ea;
+    margin-left:10px;
+}
+
+.sample-btn:hover{
+    background:#7325b9;
+}
+
+.footer-note{
+    margin-top:15px;
+    color:#777;
+    font-size:14px;
+}
+
+@media(max-width:768px){
+
+    body{
+        padding:15px;
+    }
+
+    .card,
+    .result-card{
+        padding:22px;
+    }
+
+    h1{
+        font-size:28px;
+    }
+
+    .score{
+        font-size:48px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h1>ATS Resume Analyzer</h1>
+
+<p class="subtitle">
+Paste resume and job description to get instant ATS analysis.
+</p>
+
+<div class="input-group">
+<label>Full Name</label>
+<input type="text" id="name" placeholder="Enter your full name">
+</div>
+
+<div class="input-group">
+<label>WhatsApp Number</label>
+<input type="text" id="whatsapp" placeholder="Enter WhatsApp number">
+</div>
+
+<div class="input-group">
+<label>Paste Resume</label>
+<textarea id="resumeText" placeholder="Paste resume here..."></textarea>
+</div>
+
+<div class="input-group">
+<label>Paste Job Description</label>
+<textarea id="jobDescription" placeholder="Paste job description here..."></textarea>
+</div>
+
+<button onclick="analyzeResume()">
+Analyze Resume
+</button>
+
+<button class="sample-btn" onclick="loadSampleData()">
+Load Sample Data
+</button>
+
+<p class="footer-note">
+This ATS analyzer checks keyword matching between resume and job description.
+</p>
+
+</div>
+
+<div class="result-card" id="resultCard">
+
+<div class="score-box">
+
+<h2>ATS Match Score</h2>
+
+<div class="score" id="score">
+0%
+</div>
+
+</div>
+
+<div class="section">
+
+<h3>Assessment</h3>
+
+<p id="assessment"></p>
+
+</div>
+
+<div class="section">
+
+<h3>Matched Keywords</h3>
+
+<div class="tags" id="matchedKeywords"></div>
+
+</div>
+
+<div class="section">
+
+<h3>Missing Keywords</h3>
+
+<div class="tags" id="missingKeywords"></div>
+
+</div>
+
+<div class="section">
+
+<h3>Your Strengths</h3>
+
+<ul id="strengths"></ul>
+
+</div>
+
+<div class="section">
+
+<h3>How To Improve</h3>
+
+<ul id="improvements"></ul>
+
+</div>
+
+<button class="download-btn" onclick="downloadPDF()">
+Download PDF Report
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+let reportData = {};
+
+function loadSampleData(){
+
+document.getElementById('name').value =
+"Rahul Sharma";
+
+document.getElementById('whatsapp').value =
+"9876543210";
+
+document.getElementById('resumeText').value =
+`Java Developer with experience in Spring Boot, REST API, MySQL, JavaScript, React and Git. Built multiple projects and worked in Agile teams. Strong communication and problem-solving skills.`;
+
+document.getElementById('jobDescription').value =
+`We are looking for a Java Developer with Spring Boot, REST API, SQL, Git, React, communication skills, teamwork, Agile methodology and debugging skills.`;
+
+}
+
+function analyzeResume(){
+
+const resumeText =
+document.getElementById('resumeText')
+.value
+.toLowerCase();
+
+const jd =
+document.getElementById('jobDescription')
+.value
+.toLowerCase();
+
+if(!resumeText){
+
+alert("Please paste resume.");
+
+return;
+
+}
+
+if(!jd){
+
+alert("Please paste job description.");
+
+return;
+
+}
+
+const keywords = extractKeywords(jd);
+
+let matched = [];
+let missing = [];
+
+keywords.forEach(keyword => {
+
+if(resumeText.includes(keyword)){
+
+matched.push(keyword);
+
+}else{
+
+missing.push(keyword);
+
+}
+
+});
+
+const score =
+Math.round(
+(matched.length / keywords.length) * 100
+);
+
+let assessment = "";
+
+if(score >= 80){
+
+assessment =
+"Excellent ATS match. Your resume is highly aligned with the role.";
+
+}
+else if(score >= 60){
+
+assessment =
+"Good ATS score. Your profile matches many job requirements.";
+
+}
+else{
+
+assessment =
+"Low ATS score. Resume needs optimization for this role.";
+
+}
+
+let strengths = [];
+
+if(matched.length >= 8){
+
+strengths.push(
+"Strong keyword alignment with the job description"
+);
+
+}
+
+if(resumeText.includes("project")){
+
+strengths.push(
+"Projects section detected"
+);
+
+}
+
+if(resumeText.includes("experience")){
+
+strengths.push(
+"Experience section included"
+);
+
+}
+
+if(resumeText.includes("skills")){
+
+strengths.push(
+"Skills section available"
+);
+
+}
+
+if(resumeText.includes("react")){
+
+strengths.push(
+"Relevant technical stack detected"
+);
+
+}
+
+let improvements = [];
+
+if(missing.length > 0){
+
+improvements.push(
+"Add missing ATS keywords naturally in resume"
+);
+
+}
+
+improvements.push(
+"Use measurable achievements with numbers"
+);
+
+improvements.push(
+"Customize resume for every job application"
+);
+
+improvements.push(
+"Improve action-oriented bullet points"
+);
+
+improvements.push(
+"Add more domain-specific tools and technologies"
+);
+
+document.getElementById('score').innerText =
+score + "%";
+
+document.getElementById('assessment').innerText =
+assessment;
+
+renderTags(
+"matchedKeywords",
+matched,
+"matched"
+);
+
+renderTags(
+"missingKeywords",
+missing,
+"missing"
+);
+
+renderList(
+"strengths",
+strengths
+);
+
+renderList(
+"improvements",
+improvements
+);
+
+document.getElementById('resultCard')
+.style.display = "block";
+
+reportData = {
+
+name:
+document.getElementById('name').value,
+
+whatsapp:
+document.getElementById('whatsapp').value,
+
+score,
+assessment,
+matched,
+missing,
+strengths,
+improvements
+
+};
+
+}
+
+function extractKeywords(text){
+
+const stopWords = [
+
+"the","and","for","with","that","this",
+"your","have","will","from","they",
+"their","role","team","work","ability",
+"skills","candidate","required","looking",
+"developer","experience"
+
+];
+
+const words = text
+.replace(/[^\w\s]/g,'')
+.split(/\s+/)
+.filter(word =>
+
+word.length > 3 &&
+!stopWords.includes(word)
+
+);
+
+return [...new Set(words)].slice(0,30);
+
+}
+
+function renderTags(containerId, items, className){
+
+const container =
+document.getElementById(containerId);
+
+container.innerHTML = "";
+
+items.forEach(item => {
+
+const div =
+document.createElement('div');
+
+div.className =
+`tag ${className}`;
+
+div.innerText = item;
+
+container.appendChild(div);
+
+});
+
+}
+
+function renderList(containerId, items){
+
+const ul =
+document.getElementById(containerId);
+
+ul.innerHTML = "";
+
+items.forEach(item => {
+
+const li =
+document.createElement('li');
+
+li.innerText = item;
+
+ul.appendChild(li);
+
+});
+
+}
+
+function downloadPDF(){
+
+const { jsPDF } = window.jspdf;
+
+const doc = new jsPDF();
+
+let y = 20;
+
+doc.setFontSize(22);
+
+doc.text(
+"ATS Resume Analysis Report",
+20,
+y
+);
+
+y += 15;
+
+doc.setFontSize(12);
+
+doc.text(
+`Name: ${reportData.name}`,
+20,
+y
+);
+
+y += 10;
+
+doc.text(
+`WhatsApp: ${reportData.whatsapp}`,
+20,
+y
+);
+
+y += 10;
+
+doc.text(
+`ATS Score: ${reportData.score}%`,
+20,
+y
+);
+
+y += 15;
+
+doc.setFontSize(14);
+
+doc.text(
+"Assessment",
+20,
+y
+);
+
+y += 8;
+
+doc.setFontSize(12);
+
+const assessmentLines =
+doc.splitTextToSize(
+reportData.assessment,
+170
+);
+
+doc.text(
+assessmentLines,
+20,
+y
+);
+
+y += 20;
+
+doc.setFontSize(14);
+
+doc.text(
+"Matched Keywords",
+20,
+y
+);
+
+y += 8;
+
+doc.setFontSize(12);
+
+const matchedText =
+reportData.matched.join(", ");
+
+const matchedLines =
+doc.splitTextToSize(
+matchedText,
+170
+);
+
+doc.text(
+matchedLines,
+20,
+y
+);
+
+y += 20;
+
+doc.setFontSize(14);
+
+doc.text(
+"Missing Keywords",
+20,
+y
+);
+
+y += 8;
+
+doc.setFontSize(12);
+
+const missingText =
+reportData.missing.join(", ");
+
+const missingLines =
+doc.splitTextToSize(
+missingText,
+170
+);
+
+doc.text(
+missingLines,
+20,
+y
+);
+
+y += 25;
+
+doc.setFontSize(14);
+
+doc.text(
+"Your Strengths",
+20,
+y
+);
+
+y += 10;
+
+doc.setFontSize(12);
+
+reportData.strengths.forEach(item => {
+
+doc.text(
+"• " + item,
+25,
+y
+);
+
+y += 8;
+
+});
+
+y += 8;
+
+doc.setFontSize(14);
+
+doc.text(
+"How To Improve",
+20,
+y
+);
+
+y += 10;
+
+doc.setFontSize(12);
+
+reportData.improvements.forEach(item => {
+
+doc.text(
+"• " + item,
+25,
+y
+);
+
+y += 8;
+
+});
+
+doc.save(
+"ATS_Resume_Report.pdf"
+);
+
+}
+
+</script>
+
+</body>
+</html>
+```
