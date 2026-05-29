@@ -1,0 +1,1132 @@
+```html id="x4qk8m"
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Tizzle ATS Resume Analyzer</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- PDF Reader -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:
+    linear-gradient(
+    135deg,
+    #eef4ff,
+    #f9fbff
+    );
+    padding:30px;
+    color:#1f2937;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+.brand{
+    font-size:22px;
+    font-weight:800;
+    color:#00a2ff;
+    margin-bottom:18px;
+}
+
+.card{
+
+    background:white;
+
+    border-radius:30px;
+
+    padding:40px;
+
+    box-shadow:
+    0 15px 45px rgba(37,99,235,0.12);
+
+    border:1px solid #e5edff;
+}
+
+.hero{
+
+    text-align:center;
+    margin-bottom:35px;
+}
+
+.hero h1{
+
+    font-size:42px;
+    color:#111827;
+    margin-bottom:10px;
+}
+
+.hero p{
+
+    color:#6b7280;
+    font-size:16px;
+}
+
+.input-group{
+    margin-bottom:24px;
+}
+
+label{
+
+    display:block;
+    margin-bottom:10px;
+    font-weight:600;
+    color:#1f2937;
+}
+
+input,
+textarea{
+
+    width:100%;
+
+    padding:16px;
+
+    border-radius:18px;
+
+    border:1px solid #d8e2ff;
+
+    font-size:15px;
+
+    font-family:'Poppins',sans-serif;
+
+    background:#f9fbff;
+
+    transition:0.3s;
+}
+
+input:focus,
+textarea:focus{
+
+    outline:none;
+
+    border-color:#2563eb;
+
+    box-shadow:
+    0 0 0 4px rgba(37,99,235,0.12);
+}
+
+textarea{
+    min-height:220px;
+    resize:vertical;
+}
+
+.file-box{
+
+    border:2px dashed #a5c7ff;
+
+    background:#f5f9ff;
+
+    padding:25px;
+
+    border-radius:20px;
+
+    text-align:center;
+}
+
+.file-box input{
+    border:none;
+    background:none;
+    padding:0;
+}
+
+button{
+
+    background:
+    linear-gradient(
+    135deg,
+    #2563eb,
+    #00a2ff
+    );
+
+    color:white;
+
+    border:none;
+
+    padding:17px 34px;
+
+    border-radius:18px;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:0.3s;
+
+    box-shadow:
+    0 10px 25px rgba(37,99,235,0.22);
+}
+
+button:hover{
+
+    transform:translateY(-2px);
+
+    opacity:0.96;
+}
+
+.result-card{
+
+    display:none;
+
+    margin-top:35px;
+
+    background:white;
+
+    border-radius:30px;
+
+    padding:40px;
+
+    box-shadow:
+    0 15px 45px rgba(37,99,235,0.12);
+
+    border:1px solid #e5edff;
+}
+
+.score-section{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    flex-wrap:wrap;
+
+    gap:20px;
+
+    margin-bottom:35px;
+}
+
+.score-box{
+
+    background:
+    linear-gradient(
+    135deg,
+    #2563eb,
+    #00a2ff
+    );
+
+    color:white;
+
+    padding:30px;
+
+    border-radius:28px;
+
+    width:280px;
+
+    text-align:center;
+}
+
+.score-box h2{
+
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+.score{
+
+    font-size:68px;
+    font-weight:800;
+}
+
+.assessment-box{
+
+    flex:1;
+
+    background:#f7faff;
+
+    border-radius:25px;
+
+    padding:28px;
+}
+
+.assessment-box h3{
+
+    color:#2563eb;
+    margin-bottom:10px;
+}
+
+.section{
+
+    margin-bottom:32px;
+}
+
+.section h3{
+
+    margin-bottom:14px;
+
+    color:#111827;
+
+    font-size:22px;
+}
+
+.tags{
+
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.tag{
+
+    padding:10px 16px;
+
+    border-radius:40px;
+
+    font-size:14px;
+
+    font-weight:600;
+}
+
+.matched{
+
+    background:#dcfce7;
+    color:#166534;
+}
+
+.missing{
+
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.skill{
+
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+ul{
+    padding-left:24px;
+}
+
+li{
+    margin-bottom:10px;
+    line-height:1.6;
+}
+
+.download-btn{
+
+    width:100%;
+
+    padding:18px;
+
+    font-size:18px;
+
+    margin-top:10px;
+}
+
+.footer-note{
+
+    margin-top:18px;
+
+    color:#6b7280;
+
+    font-size:14px;
+}
+
+.loader{
+
+    display:none;
+
+    margin-top:20px;
+
+    color:#2563eb;
+
+    font-weight:600;
+}
+
+@media(max-width:768px){
+
+    body{
+        padding:15px;
+    }
+
+    .card,
+    .result-card{
+        padding:25px;
+    }
+
+    .hero h1{
+        font-size:30px;
+    }
+
+    .score-box{
+        width:100%;
+    }
+
+    .score{
+        font-size:52px;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="brand">
+Tizzle by Priyanka Barge
+</div>
+
+<div class="card">
+
+<div class="hero">
+
+<h1>ATS Resume Analyzer</h1>
+
+<p>
+Upload your resume PDF and paste the job description to get a professional ATS analysis report.
+</p>
+
+</div>
+
+<div class="input-group">
+
+<label>Full Name</label>
+
+<input
+type="text"
+id="name"
+placeholder="Enter full name"
+/>
+
+</div>
+
+<div class="input-group">
+
+<label>WhatsApp Number</label>
+
+<input
+type="text"
+id="whatsapp"
+placeholder="Enter WhatsApp number"
+/>
+
+</div>
+
+<div class="input-group">
+
+<label>Upload Resume (PDF)</label>
+
+<div class="file-box">
+
+<input
+type="file"
+id="resumeFile"
+accept=".pdf"
+/>
+
+</div>
+
+</div>
+
+<div class="input-group">
+
+<label>Paste Job Description</label>
+
+<textarea
+id="jobDescription"
+placeholder="Paste job description here..."
+></textarea>
+
+</div>
+
+<button onclick="analyzeResume()">
+Analyze Resume
+</button>
+
+<div class="loader" id="loader">
+Analyzing Resume...
+</div>
+
+<p class="footer-note">
+Upload resume in PDF format only.
+</p>
+
+</div>
+
+<div class="result-card" id="resultCard">
+
+<div class="score-section">
+
+<div class="score-box">
+
+<h2>ATS Score</h2>
+
+<div class="score" id="score">
+0%
+</div>
+
+</div>
+
+<div class="assessment-box">
+
+<h3>Assessment</h3>
+
+<p id="assessment"></p>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<h3>Matched Keywords</h3>
+
+<div class="tags" id="matchedKeywords"></div>
+
+</div>
+
+<div class="section">
+
+<h3>Missing Keywords</h3>
+
+<div class="tags" id="missingKeywords"></div>
+
+</div>
+
+<div class="section">
+
+<h3>Technical Skills Fit</h3>
+
+<div class="tags" id="technicalSkills"></div>
+
+</div>
+
+<div class="section">
+
+<h3>Your Strengths</h3>
+
+<ul id="strengths"></ul>
+
+</div>
+
+<div class="section">
+
+<h3>How To Improve</h3>
+
+<ul id="improvements"></ul>
+
+</div>
+
+<button
+class="download-btn"
+onclick="downloadPDF()"
+>
+Download PDF Report
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+let reportData = {};
+
+async function extractTextFromPDF(file){
+
+const arrayBuffer =
+await file.arrayBuffer();
+
+const pdf =
+await pdfjsLib.getDocument({
+data: arrayBuffer
+}).promise;
+
+let fullText = "";
+
+for(let i = 1; i <= pdf.numPages; i++){
+
+const page =
+await pdf.getPage(i);
+
+const textContent =
+await page.getTextContent();
+
+const pageText =
+textContent.items
+.map(item => item.str)
+.join(" ");
+
+fullText += " " + pageText;
+
+}
+
+return fullText;
+
+}
+
+async function analyzeResume(){
+
+document.getElementById('loader')
+.style.display = "block";
+
+const fileInput =
+document.getElementById('resumeFile');
+
+const jd =
+document.getElementById('jobDescription')
+.value
+.toLowerCase();
+
+if(!fileInput.files.length){
+
+alert("Please upload resume.");
+
+document.getElementById('loader')
+.style.display = "none";
+
+return;
+
+}
+
+if(!jd){
+
+alert("Please paste job description.");
+
+document.getElementById('loader')
+.style.display = "none";
+
+return;
+
+}
+
+const file =
+fileInput.files[0];
+
+const extractedText =
+await extractTextFromPDF(file);
+
+const resumeText =
+extractedText.toLowerCase();
+
+const keywords =
+extractKeywords(jd);
+
+let matched = [];
+let missing = [];
+
+keywords.forEach(keyword => {
+
+if(resumeText.includes(keyword)){
+
+matched.push(keyword);
+
+}else{
+
+missing.push(keyword);
+
+}
+
+});
+
+const technicalSkillList = [
+
+"java","python","react","node",
+"mongodb","mysql","sql",
+"spring","spring boot",
+"javascript","typescript",
+"html","css","git","aws",
+"docker","kubernetes",
+"rest api","api","firebase",
+"machine learning","data analysis",
+"excel","power bi","tableau"
+
+];
+
+let technicalSkills = [];
+
+technicalSkillList.forEach(skill => {
+
+if(
+resumeText.includes(skill) &&
+jd.includes(skill)
+){
+
+technicalSkills.push(skill);
+
+}
+
+});
+
+const score =
+Math.round(
+(matched.length / keywords.length) * 100
+);
+
+let assessment = "";
+
+if(score >= 80){
+
+assessment =
+"Excellent ATS compatibility. Your resume aligns strongly with the job requirements and demonstrates strong role relevance.";
+
+}
+else if(score >= 60){
+
+assessment =
+"Good ATS score. Your resume matches several important requirements but can be improved further for higher shortlist chances.";
+
+}
+else{
+
+assessment =
+"Low ATS match detected. Resume optimization is recommended to improve alignment with the job description.";
+
+}
+
+let strengths = [];
+
+if(technicalSkills.length > 0){
+
+strengths.push(
+"Strong technical alignment in " +
+technicalSkills.join(", ")
+);
+
+}
+
+if(resumeText.includes("project")){
+
+strengths.push(
+"Projects section identified in resume"
+);
+
+}
+
+if(resumeText.includes("experience")){
+
+strengths.push(
+"Professional experience is clearly mentioned"
+);
+
+}
+
+if(resumeText.includes("team")){
+
+strengths.push(
+"Collaboration and teamwork keywords detected"
+);
+
+}
+
+if(resumeText.includes("communication")){
+
+strengths.push(
+"Communication skills highlighted"
+);
+
+}
+
+let improvements = [];
+
+if(missing.length > 0){
+
+improvements.push(
+"Add missing ATS keywords naturally in your resume"
+);
+
+}
+
+improvements.push(
+"Include measurable achievements using numbers"
+);
+
+improvements.push(
+"Tailor your resume for every application"
+);
+
+improvements.push(
+"Improve project impact descriptions"
+);
+
+improvements.push(
+"Add more relevant tools and technologies"
+);
+
+document.getElementById('score')
+.innerText =
+score + "%";
+
+document.getElementById('assessment')
+.innerText =
+assessment;
+
+renderTags(
+"matchedKeywords",
+matched,
+"matched"
+);
+
+renderTags(
+"missingKeywords",
+missing,
+"missing"
+);
+
+renderTags(
+"technicalSkills",
+technicalSkills,
+"skill"
+);
+
+renderList(
+"strengths",
+strengths
+);
+
+renderList(
+"improvements",
+improvements
+);
+
+document.getElementById('resultCard')
+.style.display = "block";
+
+document.getElementById('loader')
+.style.display = "none";
+
+reportData = {
+
+name:
+document.getElementById('name').value,
+
+whatsapp:
+document.getElementById('whatsapp').value,
+
+score,
+assessment,
+matched,
+missing,
+technicalSkills,
+strengths,
+improvements
+
+};
+
+}
+
+function extractKeywords(text){
+
+const stopWords = [
+
+"the","and","for","with",
+"that","this","your",
+"have","will","from",
+"they","their","role",
+"team","work","ability",
+"skills","candidate",
+"required","looking",
+"experience"
+
+];
+
+const words = text
+.replace(/[^\w\s]/g,'')
+.split(/\s+/)
+.filter(word =>
+
+word.length > 3 &&
+!stopWords.includes(word)
+
+);
+
+return [...new Set(words)].slice(0,30);
+
+}
+
+function renderTags(containerId, items, className){
+
+const container =
+document.getElementById(containerId);
+
+container.innerHTML = "";
+
+items.forEach(item => {
+
+const div =
+document.createElement('div');
+
+div.className =
+`tag ${className}`;
+
+div.innerText = item;
+
+container.appendChild(div);
+
+});
+
+}
+
+function renderList(containerId, items){
+
+const ul =
+document.getElementById(containerId);
+
+ul.innerHTML = "";
+
+items.forEach(item => {
+
+const li =
+document.createElement('li');
+
+li.innerText = item;
+
+ul.appendChild(li);
+
+});
+
+}
+
+function downloadPDF(){
+
+const { jsPDF } = window.jspdf;
+
+const doc = new jsPDF();
+
+let y = 20;
+
+doc.setFontSize(24);
+
+doc.setTextColor(0,162,255);
+
+doc.text(
+"Tizzle by Priyanka Barge",
+20,
+y
+);
+
+y += 18;
+
+doc.setTextColor(0,0,0);
+
+doc.setFontSize(22);
+
+doc.text(
+"ATS Resume Analysis Report",
+20,
+y
+);
+
+y += 18;
+
+doc.setFontSize(12);
+
+doc.text(
+`Name: ${reportData.name}`,
+20,
+y
+);
+
+y += 10;
+
+doc.text(
+`WhatsApp: ${reportData.whatsapp}`,
+20,
+y
+);
+
+y += 10;
+
+doc.text(
+`ATS Score: ${reportData.score}%`,
+20,
+y
+);
+
+y += 18;
+
+doc.setFontSize(15);
+
+doc.text(
+"Assessment",
+20,
+y
+);
+
+y += 8;
+
+doc.setFontSize(12);
+
+const assessmentLines =
+doc.splitTextToSize(
+reportData.assessment,
+170
+);
+
+doc.text(
+assessmentLines,
+20,
+y
+);
+
+y += 22;
+
+doc.setFontSize(15);
+
+doc.text(
+"Matched Keywords",
+20,
+y
+);
+
+y += 8;
+
+doc.setFontSize(12);
+
+const matchedLines =
+doc.splitTextToSize(
+reportData.matched.join(", "),
+170
+);
+
+doc.text(
+matchedLines,
+20,
+y
+);
+
+y += 20;
+
+doc.setFontSize(15);
+
+doc.text(
+"Missing Keywords",
+20,
+y
+);
+
+y += 8;
+
+doc.setFontSize(12);
+
+const missingLines =
+doc.splitTextToSize(
+reportData.missing.join(", "),
+170
+);
+
+doc.text(
+missingLines,
+20,
+y
+);
+
+y += 24;
+
+doc.setFontSize(15);
+
+doc.text(
+"Technical Skills Fit",
+20,
+y
+);
+
+y += 8;
+
+doc.setFontSize(12);
+
+const skillsLines =
+doc.splitTextToSize(
+reportData.technicalSkills.join(", "),
+170
+);
+
+doc.text(
+skillsLines,
+20,
+y
+);
+
+y += 24;
+
+doc.setFontSize(15);
+
+doc.text(
+"Your Strengths",
+20,
+y
+);
+
+y += 10;
+
+doc.setFontSize(12);
+
+reportData.strengths.forEach(item => {
+
+doc.text(
+"• " + item,
+25,
+y
+);
+
+y += 8;
+
+});
+
+y += 10;
+
+doc.setFontSize(15);
+
+doc.text(
+"How To Improve",
+20,
+y
+);
+
+y += 10;
+
+doc.setFontSize(12);
+
+reportData.improvements.forEach(item => {
+
+doc.text(
+"• " + item,
+25,
+y
+);
+
+y += 8;
+
+});
+
+doc.save(
+"Tizzle_ATS_Report.pdf"
+);
+
+}
+
+</script>
+
+</body>
+
+</html>
+```
