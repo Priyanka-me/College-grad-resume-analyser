@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tizzle Resume Analyser</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+@media print {
+  body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #app { display: none !important; }
+  #print-area { display: block !important; }
+  @page { margin: 0; size: A4; }
+}
+#print-area { display: none; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f2f2f0; color: #1a1a1a; min-height: 100vh; }
+#app { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem; }
+.brand { margin-bottom: 1.25rem; }
+.brand-name { font-size: 26px; font-weight: 800; color: #0066FF; letter-spacing: -0.5px; line-height: 1; }
+.brand-by { font-size: 11px; color: #0066FF; opacity: 0.7; font-weight: 500; letter-spacing: 0.04em; margin-top: 2px; }
+.app-title { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+.subtitle { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media(max-width:520px){ .row2 { grid-template-columns: 1fr; } }
+label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 5px; }
+input[type=text], input[type=tel] { width: 100%; height: 40px; border: 1.5px solid #ddd; border-radius: 8px; background: #fff; font-size: 14px; padding: 0 12px; font-family: inherit; transition: border-color .15s; }
+input:focus { outline: none; border-color: #0066FF; }
+input::placeholder { color: #bbb; }
+hr { border: none; border-top: 1.5px solid #e8e8e6; margin: 14px 0; }
+.drop-zone { border: 2px dashed #ccc; border-radius: 10px; background: #fafaf8; padding: 24px 16px; text-align: center; cursor: pointer; position: relative; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: .15s; }
+.drop-zone:hover, .drop-zone.over { border-color: #0066FF; background: #f0f5ff; }
+.drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.dz-icon { font-size: 28px; margin-bottom: 6px; }
+.dz-title { font-size: 14px; font-weight: 600; }
+.dz-sub { font-size: 12px; color: #999; margin-top: 3px; }
+.pill { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid #ddd; border-radius: 8px; padding: 7px 12px; font-size: 13px; margin-top: 8px; }
+.pill .pname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill .prm { background: none; border: none; cursor: pointer; color: #aaa; font-size: 18px; line-height: 1; padding: 0; }
+.pill .prm:hover { color: #e24b4a; }
+textarea { width: 100%; border: 1.5px solid #ddd; border-radius: 8px; background: #fff; font-size: 14px; padding: 10px 12px; resize: vertical; line-height: 1.6; height: 170px; font-family: inherit; transition: border-color .15s; }
+textarea:focus { outline: none; border-color: #0066FF; }
+textarea::placeholder { color: #bbb; }
+.btn-main { width: 100%; padding: 13px; border-radius: 8px; background: #0066FF; color: #fff; border: none; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: opacity .15s; margin-top: 4px; }
+.btn-main:hover { opacity: .88; }
+.btn-main:disabled { opacity: .38; cursor: not-allowed; }
+.err { background: #fff0f0; border: 1.5px solid #fcc; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #c00; margin-top: 10px; }
+#results { margin-top: 1.5rem; }
+.meta-bar { background: linear-gradient(135deg, #0055dd 0%, #0066FF 100%); color: #fff; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; font-size: 13px; line-height: 1.7; }
+.meta-bar strong { font-size: 16px; }
+.score-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 12px; }
+@media(max-width:520px){ .score-grid { grid-template-columns: repeat(2,1fr); } }
+.sc { background: #fff; border: 1.5px solid #e8e8e6; border-radius: 10px; padding: 12px 10px; text-align: center; }
+.sc-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #888; margin-bottom: 4px; }
+.sc-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.g { color: #1D9E75; } .m { color: #C07A12; } .b { color: #D94040; }
+.card { background: #fff; border: 1.5px solid #e8e8e6; border-radius: 10px; padding: 1.1rem 1.25rem; margin-bottom: 10px; }
+.card h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bl { font-size: 12px; color: #777; width: 90px; flex-shrink: 0; }
+.bt { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+.bf { height: 100%; border-radius: 3px; }
+.bn { font-size: 12px; font-weight: 600; width: 30px; text-align: right; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 500; }
+.tag.hit { background: #e0f5ee; color: #0c6b50; border: 1.5px solid #9fdfc8; }
+.tag.mis { background: #fce8e8; color: #a82020; border: 1.5px solid #f5b0b0; }
+.tip-li { list-style: none; }
+.tip-li li { font-size: 13px; line-height: 1.65; padding: 6px 0; display: flex; gap: 10px; align-items: flex-start; border-bottom: 1px solid #f0f0ee; }
+.tip-li li:last-child { border-bottom: none; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.dh { background: #D94040; } .dm { background: #C07A12; } .dl { background: #1D9E75; }
+.summary { font-size: 14px; line-height: 1.75; color: #333; }
+.btn-dl { width: 100%; padding: 13px; border-radius: 8px; background: #1D9E75; color: #fff; border: none; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: opacity .15s; margin-top: 1.5rem; }
+.btn-dl:hover { opacity: .88; }
+.spin { width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+#print-area { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; width: 100%; }
+.page { width: 210mm; height: 297mm; position: relative; background: #fff; page-break-after: always; overflow: hidden; }
+.page:last-child { page-break-after: auto; height: auto; min-height: 297mm; overflow: visible; }
+.p1-header { background: linear-gradient(135deg, #0033bb 0%, #0055ee 50%, #0066FF 100%); color: #fff; padding: 28px 44px 22px 44px; position: relative; overflow: hidden; }
+.p1-header::before { content:''; position:absolute; right:-50px; top:-50px; width:220px; height:220px; background:rgba(255,255,255,0.06); border-radius:50%; }
+.p1-header::after  { content:''; position:absolute; right:80px; bottom:-70px; width:180px; height:180px; background:rgba(255,255,255,0.04); border-radius:50%; }
+.p1-brand { font-size: 30px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+.p1-brand-by { font-size: 11px; opacity: 0.72; font-weight: 500; letter-spacing: 0.06em; margin-top: 3px; margin-bottom: 14px; }
+.p1-rpt-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+.p1-meta { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 12px; opacity: 0.85; }
+.p1-body { padding: 18px 44px 0 44px; }
+.score-hero { display: flex; align-items: center; gap: 22px; background: #f6f8ff; border: 2px solid #dce8ff; border-radius: 14px; padding: 14px 20px; margin-bottom: 16px; }
+.score-circle { width: 78px; height: 78px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: #fff; line-height: 1.2; text-align: center; }
+.score-hero-right { flex: 1; }
+.score-hero-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #888; font-weight: 700; margin-bottom: 3px; }
+.score-hero-val { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
+.score-hero-desc { font-size: 12px; color: #555; line-height: 1.55; }
+.subscores { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+.subsc { text-align: center; border: 1.5px solid #e4e4e2; border-radius: 10px; padding: 12px 8px; background: #fafafa; }
+.subsc-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #888; margin-bottom: 5px; font-weight: 700; }
+.subsc-val { font-size: 20px; font-weight: 800; }
+.subsc-bar { height: 4px; background: #eee; border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.subsc-bar-fill { height: 100%; border-radius: 2px; }
+.sec-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: #0055dd; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #dce8ff; display: flex; align-items: center; gap: 6px; }
+.sec-title.green { color: #0c6b50; border-bottom-color: #9fdfc8; }
+.sec-title.red { color: #a82020; border-bottom-color: #f5b0b0; }
+.sbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.sbar-lbl { font-size: 12px; color: #555; width: 110px; flex-shrink: 0; }
+.sbar-track { flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+.sbar-fill { height: 100%; border-radius: 4px; }
+.sbar-num { font-size: 12px; font-weight: 700; width: 36px; text-align: right; flex-shrink: 0; }
+.assess-box { background: #f6f8ff; border-left: 4px solid #0066FF; border-radius: 0 8px 8px 0; padding: 13px 16px; font-size: 12.5px; line-height: 1.75; color: #333; }
+.kw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.ptags { display: flex; flex-wrap: wrap; gap: 5px; }
+.ptag { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; }
+.phit { background: #e0f5ee; color: #0c6b50; border: 1px solid #9fdfc8; }
+.pmis { background: #fce8e8; color: #a82020; border: 1px solid #f5b0b0; }
+.tip-row { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid #f0f0ee; }
+.tip-row:last-child { border-bottom: none; }
+.tip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.tip-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; white-space: nowrap; }
+.tip-badge.bh { background: #fce8e8; color: #a82020; }
+.tip-badge.bm { background: #fff3e0; color: #b45309; }
+.tip-badge.bl { background: #e0f5ee; color: #0c6b50; }
+.tip-text { font-size: 12.5px; line-height: 1.6; color: #333; }
+.p2-header { background: linear-gradient(135deg, #0033bb 0%, #0055ee 50%, #0066FF 100%); color: #fff; padding: 24px 44px; display: flex; align-items: center; justify-content: space-between; }
+.p2-brand { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
+.p2-brand-by { font-size: 10px; opacity: 0.72; font-weight: 500; margin-top: 1px; }
+.p2-title { font-size: 13px; font-weight: 600; opacity: 0.85; text-align: right; }
+.p2-candidate { font-size: 11px; opacity: 0.7; text-align: right; margin-top: 2px; }
+.p2-body { padding: 32px 44px; }
+.str-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #eef0f8; }
+.str-row:last-child { border-bottom: none; }
+.str-num { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #0055dd, #0066FF); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.str-text { font-size: 13px; line-height: 1.65; color: #222; flex: 1; }
+.p2-summary-card { background: #f6f8ff; border: 2px solid #dce8ff; border-radius: 12px; padding: 18px 22px; margin-bottom: 28px; }
+.p2-summary-score { display: flex; align-items: center; gap: 16px; }
+.p2-big-score { font-size: 42px; font-weight: 900; line-height: 1; }
+.p2-score-meta { flex: 1; }
+.p2-score-verdict { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.rpt-footer { padding: 14px 44px; background: #f4f4f2; border-top: 2px solid #e4e4e2; display: flex; justify-content: space-between; align-items: center; }
+.footer-brand { font-size: 14px; font-weight: 900; color: #0066FF; }
+.footer-by { font-size: 10px; color: #aaa; font-weight: 400; }
+.footer-meta { font-size: 11px; color: #aaa; text-align: right; }
+.footer-pg { font-size: 11px; color: #bbb; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="brand">
+    <div class="brand-name">Tizzle</div>
+    <div class="brand-by">by Priyanka Barge</div>
+  </div>
+  <div class="app-title">📄 Resume Analyser</div>
+  <p class="subtitle">Upload your resume and paste a job description for an instant match report. No API key needed — runs entirely in your browser.</p>
+
+  <div id="form-area">
+    <div class="row2">
+      <div>
+        <label for="uname">Full name</label>
+        <input type="text" id="uname" placeholder="e.g. Priya Sharma">
+      </div>
+      <div>
+        <label for="uwa">WhatsApp number</label>
+        <input type="tel" id="uwa" placeholder="e.g. +91 98765 43210">
+      </div>
+    </div>
+    <hr>
+    <div class="row2" style="margin-top:14px;">
+      <div>
+        <label>Your resume</label>
+        <div class="drop-zone" id="dz" ondragover="dzOver(event)" ondragleave="dzOut()" ondrop="dzDrop(event)">
+          <input type="file" id="rfile" accept=".pdf,.docx,.txt" onchange="onPick(event)">
+          <div class="dz-icon">📁</div>
+          <div class="dz-title">Drop file or click to browse</div>
+          <div class="dz-sub">PDF · DOCX · TXT</div>
+        </div>
+        <div id="pill"></div>
+      </div>
+      <div>
+        <label for="jd">Job description</label>
+        <textarea id="jd" placeholder="Paste the full job description here."></textarea>
+      </div>
+    </div>
+    <button class="btn-main" id="gobtn" onclick="analyse()">✨ Analyse my resume</button>
+    <div id="errs"></div>
+  </div>
+
+  <div id="results" style="display:none;"></div>
+</div>
+
+<div id="print-area"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let rText='', rFile='', stored=null;
+
+function dzOver(e){ e.preventDefault(); document.getElementById('dz').classList.add('over'); }
+function dzOut(){ document.getElementById('dz').classList.remove('over'); }
+function dzDrop(e){ e.preventDefault(); dzOut(); if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); }
+function onPick(e){ if(e.target.files[0]) loadFile(e.target.files[0]); }
+
+async function loadFile(file){
+  rFile=file.name; setPill(file.name,'loading');
+  try {
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(ext==='pdf') rText=await readPdf(file);
+    else if(ext==='docx') rText=await readDocx(file);
+    else if(ext==='txt') rText=await file.text();
+    else throw new Error('Please upload PDF, DOCX, or TXT.');
+    if(!rText.trim()) throw new Error('No text found. Try a DOCX or text-based PDF.');
+    setPill(file.name,'ok');
+  } catch(e){ rText=''; setPill(null,'err',e.message); }
+}
+async function readPdf(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let out='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const pg=await pdf.getPage(i);
+    const ct=await pg.getTextContent();
+    out+=ct.items.map(s=>s.str).join(' ')+'\n';
+  }
+  return out;
+}
+async function readDocx(file){
+  const buf=await file.arrayBuffer();
+  return (await mammoth.extractRawText({arrayBuffer:buf})).value;
+}
+function setPill(name,state,msg){
+  const a=document.getElementById('pill');
+  if(state==='loading') a.innerHTML=`<div class="pill">⏳ <span class="pname">Reading ${name}…</span></div>`;
+  else if(state==='ok') a.innerHTML=`<div class="pill">✅ <span class="pname">${name}</span><button class="prm" onclick="clearFile()">×</button></div>`;
+  else a.innerHTML=`<div class="err" style="margin-top:8px;">⚠️ ${msg}</div>`;
+}
+function clearFile(){ rText=''; rFile=''; document.getElementById('pill').innerHTML=''; document.getElementById('rfile').value=''; }
+function showErr(m){ document.getElementById('errs').innerHTML=`<div class="err">⚠️ ${m}</div>`; }
+
+const TECH=['javascript','typescript','python','java','c++','c#','ruby','go','rust','swift','kotlin','php','sql','nosql','react','angular','vue','node','express','django','flask','spring','docker','kubernetes','aws','azure','gcp','git','linux','bash','rest','graphql','machine learning','deep learning','tensorflow','pytorch','nlp','data analysis','tableau','power bi','excel','agile','scrum','jira','ci/cd','devops','figma','photoshop'];
+const SOFT=['leadership','communication','teamwork','problem solving','analytical','critical thinking','time management','project management','collaboration','presentation','mentoring','adaptability','creativity','research','writing','customer service','negotiation','planning','strategy','detail'];
+
+function phrases(text){
+  const t=text.toLowerCase(), found=new Set();
+  [...TECH,...SOFT].forEach(term=>{ if(t.includes(term)) found.add(term); });
+  t.replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>4).forEach(w=>found.add(w));
+  return found;
+}
+function atsCheck(text){
+  let score=100, issues=[];
+  if(text.length<300){ score-=20; issues.push('Resume is very short — add more detail.'); }
+  if(!/\d{4}/.test(text)){ score-=10; issues.push('No dates detected — include employment dates.'); }
+  if(!/@/.test(text)){ score-=10; issues.push('No email address detected — add one.'); }
+  if(!/(phone|mobile|\+\d|\d{3}[-.\s]\d)/.test(text.toLowerCase())){ score-=5; issues.push('No phone number detected.'); }
+  if(text.split('\n').filter(l=>l.trim()).length<10){ score-=15; issues.push('Very few lines — expand your content.'); }
+  return {score:Math.max(score,0),issues};
+}
+function sections(text){
+  const t=text.toLowerCase();
+  return {
+    experience:['experience','work history','employment'].some(k=>t.includes(k)),
+    education:['education','degree','university','bachelor','master'].some(k=>t.includes(k)),
+    skills:['skills','technologies','competencies'].some(k=>t.includes(k)),
+    projects:['projects','portfolio'].some(k=>t.includes(k)),
+    summary:['summary','objective','profile','about me'].some(k=>t.includes(k))
+  };
+}
+function sc(n){ return n>=70?'g':n>=45?'m':'b'; }
+function bc(n){ return n>=70?'#1D9E75':n>=45?'#C07A12':'#D94040'; }
+function scoreLabel(n){ return n>=75?'Strong Match 🎯':n>=50?'Moderate Match 📈':'Needs Improvement ⚠️'; }
+
+function analyse(){
+  const uname=document.getElementById('uname').value.trim();
+  const uwa=document.getElementById('uwa').value.trim();
+  const jd=document.getElementById('jd').value.trim();
+  document.getElementById('errs').innerHTML='';
+  if(!uname){ showErr('Please enter your full name.'); return; }
+  if(!uwa){ showErr('Please enter your WhatsApp number.'); return; }
+  if(!rText){ showErr('Please upload your resume first.'); return; }
+  if(!jd){ showErr('Please paste the job description.'); return; }
+  const btn=document.getElementById('gobtn');
+  btn.disabled=true; btn.innerHTML=`<div class="spin"></div> Analysing…`;
+  setTimeout(()=>{
+    const rp=phrases(rText);
+    const jdTerms=Array.from(phrases(jd)).filter(t=>TECH.includes(t)||SOFT.includes(t)||t.length>5);
+    const matched=jdTerms.filter(t=>rp.has(t));
+    const missing=jdTerms.filter(t=>!rp.has(t)).slice(0,12);
+    const kwScore=jdTerms.length?Math.round((matched.length/jdTerms.length)*100):50;
+    const {score:atsScore,issues:atsIssues}=atsCheck(rText);
+    const secs=sections(rText);
+    const bonus=Object.values(secs).filter(Boolean).length*5;
+    const expScore=Math.min(100,kwScore+bonus+(/%|\d+x/.test(rText)?10:0));
+    const skillScore=Math.min(100,matched.filter(t=>TECH.includes(t)).length*10+matched.filter(t=>SOFT.includes(t)).length*5);
+    const overall=Math.round(kwScore*.35+atsScore*.25+expScore*.25+skillScore*.15);
+    const secMiss=Object.entries(secs).filter(([,v])=>!v).map(([k])=>k);
+    let summary=overall>=75?'Your resume is a strong match for this role. ':overall>=50?'Your resume has a moderate match for this role. ':'Your resume needs work to better target this role. ';
+    summary+=secMiss.length?`Consider adding a ${secMiss.slice(0,2).join(' and ')} section. `:'Key sections are present. ';
+    summary+=missing.length>3?`Add missing keywords like "${missing.slice(0,3).join('", "')}" to improve ATS visibility.`:matched.length>5?'Good keyword coverage overall.':'Try mirroring more language from the job description.';
+    const tips=[];
+    atsIssues.forEach(i=>tips.push({p:'h',t:i}));
+    if(secMiss.includes('skills')) tips.push({p:'h',t:'Add a dedicated Skills section — ATS systems specifically look for it.'});
+    if(secMiss.includes('summary')) tips.push({p:'m',t:'Add a professional summary at the top tailored to this role.'});
+    if(missing.length) tips.push({p:'h',t:`Include these missing keywords from the JD: ${missing.slice(0,5).join(', ')}.`});
+    if(!/(achieved|improved|increased|reduced|delivered|launched|led|managed|grew)/i.test(rText)) tips.push({p:'m',t:'Use strong action verbs (achieved, delivered, led, improved) to describe your impact.'});
+    if(!/%|\d+x|\$\d|\d+\s*(users|customers|revenue)/.test(rText)) tips.push({p:'m',t:'Quantify achievements — include percentages, revenue figures, or team sizes.'});
+    if(tips.length<4) tips.push({p:'l',t:'Ensure consistent formatting: fonts, bullet styles, and date formats.'});
+    const strengths=[];
+    if(matched.length>=5) strengths.push(`Strong keyword alignment — ${matched.length} relevant terms from the job description found in your resume.`);
+    if(secs.experience) strengths.push('Work experience section is present and well-structured, which ATS systems rank highly.');
+    if(secs.education) strengths.push('Education credentials are clearly listed and easy for recruiters to verify.');
+    if(secs.skills) strengths.push('Dedicated skills section is present, which significantly improves ATS parsing accuracy.');
+    if(secs.projects) strengths.push('Projects section demonstrates practical, hands-on experience beyond job titles.');
+    if(/%|\d+x/.test(rText)) strengths.push('Quantified achievements are present — numbers stand out to both ATS and human recruiters.');
+    if(strengths.length<3) strengths.push('Resume has clear, readable structure that ATS systems can parse without errors.');
+    stored={uname,uwa,rFile,overall,atsScore,kwScore,expScore:Math.min(expScore,100),skillScore:Math.min(skillScore,100),summary,matched,missing,tips:tips.slice(0,6),strengths:strengths.slice(0,5),date:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})};
+    renderResults(stored);
+  },500);
+}
+
+function renderResults(r){
+  const bars=[['ATS fit',r.atsScore],['Keywords',r.kwScore],['Experience',r.expScore],['Skills',r.skillScore]];
+  const barsH=bars.map(([l,v])=>`<div class="bar-row"><span class="bl">${l}</span><div class="bt"><div class="bf" style="width:${v}%;background:${bc(v)};"></div></div><span class="bn" style="color:${bc(v)};">${v}</span></div>`).join('');
+  const mkT=(arr,cls)=>arr.length?arr.map(k=>`<span class="tag ${cls}">${k}</span>`).join(''):`<span style="font-size:12px;color:#bbb;">${cls==='hit'?'None detected':'All covered!'}</span>`;
+  const tipH=r.tips.map(({p,t})=>`<li><div class="dot d${p}"></div><span>${t}</span></li>`).join('');
+  const strH=r.strengths.map(s=>`<li><div class="dot dl"></div><span>${s}</span></li>`).join('');
+  document.getElementById('form-area').style.display='none';
+  const out=document.getElementById('results');
+  out.style.display='block';
+  out.innerHTML=`
+    <div class="meta-bar"><strong>${r.uname}</strong> &nbsp;·&nbsp; ${r.uwa}<br><span style="font-size:12px;opacity:.8;">${r.date} &nbsp;·&nbsp; ${r.rFile}</span></div>
+    <div class="score-grid">
+      <div class="sc"><div class="sc-lbl">Overall</div><div class="sc-val ${sc(r.overall)}">${r.overall}<span style="font-size:14px;">%</span></div></div>
+      <div class="sc" style="grid-column:span 3;text-align:left;display:flex;flex-direction:column;justify-content:center;padding:14px 16px;">${barsH}</div>
+    </div>
+    <div class="card"><h3>📝 Assessment</h3><p class="summary">${r.summary}</p></div>
+    <div class="row2">
+      <div class="card"><h3>✅ Matched keywords</h3><div class="tags">${mkT(r.matched,'hit')}</div></div>
+      <div class="card"><h3>❌ Missing keywords</h3><div class="tags">${mkT(r.missing,'mis')}</div></div>
+    </div>
+    <div class="card"><h3>💡 How to improve</h3><ul class="tip-li">${tipH}</ul></div>
+    <div class="card"><h3>⭐ Your strengths</h3><ul class="tip-li">${strH}</ul></div>
+    <button class="btn-dl" onclick="downloadReport()">⬇️ Download PDF Report</button>`;
+}
+
+function downloadReport(){
+  if(!stored){ alert('No report yet.'); return; }
+  const r=stored;
+  const sbars=[['ATS Fit',r.atsScore],['Keyword Match',r.kwScore],['Experience',r.expScore],['Skills',r.skillScore]];
+  const sbarsH=sbars.map(([l,v])=>`
+    <div class="sbar-row">
+      <span class="sbar-lbl">${l}</span>
+      <div class="sbar-track"><div class="sbar-fill" style="width:${v}%;background:${bc(v)};"></div></div>
+      <span class="sbar-num" style="color:${bc(v)};">${v}%</span>
+    </div>`).join('');
+  const tipsH=r.tips.map(({p,t})=>`
+    <div class="tip-row">
+      <div class="tip-dot" style="background:${p==='h'?'#D94040':p==='m'?'#C07A12':'#1D9E75'};"></div>
+      <span class="tip-badge b${p}">${p==='h'?'HIGH':p==='m'?'MED':'LOW'}</span>
+      <span class="tip-text">${t}</span>
+    </div>`).join('');
+  const strH=r.strengths.map((s,i)=>`
+    <div class="str-row">
+      <div class="str-num">${i+1}</div>
+      <span class="str-text">${s}</span>
+    </div>`).join('');
+  const mkT=(arr,cls)=>arr.length?arr.map(k=>`<span class="ptag ${cls}">${k}</span>`).join(''):'<span style="color:#bbb;font-size:11px;">None</span>';
+
+  document.getElementById('print-area').innerHTML=`
+    <div class="page">
+      <div class="p1-header">
+        <div class="p1-brand">Tizzle</div>
+        <div class="p1-brand-by">by Priyanka Barge</div>
+        <div class="p1-rpt-title">Resume Analysis Report</div>
+        <div class="p1-meta">
+          <span>👤 ${r.uname}</span>
+          <span>📱 ${r.uwa}</span>
+          <span>📅 ${r.date}</span>
+          <span>📄 ${r.rFile}</span>
+        </div>
+      </div>
+      <div class="p1-body">
+        <div class="score-hero">
+          <div class="score-circle" style="background:${bc(r.overall)};">${r.overall}<br><span style="font-size:13px;font-weight:600;">%</span></div>
+          <div class="score-hero-right">
+            <div class="score-hero-lbl">Overall Match Score</div>
+            <div class="score-hero-val" style="color:${bc(r.overall)};">${scoreLabel(r.overall)}</div>
+            <div class="score-hero-desc">${r.summary}</div>
+          </div>
+        </div>
+        <div class="subscores">
+          ${sbars.map(([l,v])=>`<div class="subsc"><div class="subsc-lbl">${l}</div><div class="subsc-val" style="color:${bc(v)};">${v}%</div><div class="subsc-bar"><div class="subsc-bar-fill" style="width:${v}%;background:${bc(v)};"></div></div></div>`).join('')}
+        </div>
+        <div style="margin-bottom:14px;"><div class="sec-title">📊 Score Breakdown</div>${sbarsH}</div>
+        <div style="margin-bottom:14px;"><div class="sec-title">📝 Assessment</div><div class="assess-box">${r.summary}</div></div>
+        <div style="margin-bottom:14px;">
+          <div class="kw-grid">
+            <div><div class="sec-title green">✅ Matched Keywords</div><div class="ptags">${mkT(r.matched,'phit')}</div></div>
+            <div><div class="sec-title red">❌ Missing Keywords</div><div class="ptags">${mkT(r.missing,'pmis')}</div></div>
+          </div>
+        </div>
+        <div><div class="sec-title">💡 How to Improve</div>${tipsH}</div>
+      </div>
+      <div class="rpt-footer">
+        <div><div class="footer-brand">Tizzle</div><div class="footer-by">by Priyanka Barge</div></div>
+        <div class="footer-pg">Page 1 of 2</div>
+        <div class="footer-meta">Confidential · Generated ${r.date}</div>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="p2-header">
+        <div><div class="p2-brand">Tizzle</div><div class="p2-brand-by">by Priyanka Barge</div></div>
+        <div><div class="p2-title">Resume Analysis Report</div><div class="p2-candidate">${r.uname} · ${r.date}</div></div>
+      </div>
+      <div class="p2-body">
+        <div class="p2-summary-card">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#0055dd;margin-bottom:12px;">Score Recap</div>
+          <div class="p2-summary-score">
+            <div class="p2-big-score" style="color:${bc(r.overall)};">${r.overall}%</div>
+            <div class="p2-score-meta">
+              <div class="p2-score-verdict" style="color:${bc(r.overall)};">${scoreLabel(r.overall)}</div>
+              <div style="display:flex;gap:18px;margin-top:8px;flex-wrap:wrap;">
+                ${sbars.map(([l,v])=>`<div style="text-align:center;"><div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.05em;font-weight:700;">${l}</div><div style="font-size:16px;font-weight:800;color:${bc(v)};">${v}%</div></div>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sec-title green" style="font-size:13px;margin-bottom:14px;">⭐ Your Strengths</div>
+          <div style="font-size:12px;color:#666;margin-bottom:16px;line-height:1.5;">Based on your resume content, here are the areas where you stand out for this role:</div>
+          ${strH}
+        </div>
+        <div style="margin-top:28px;padding:18px 22px;background:#fffbf0;border:2px solid #fde8a0;border-radius:12px;">
+          <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#b45309;margin-bottom:10px;">💡 Quick Tip Summary</div>
+          <ul style="list-style:none;padding:0;margin:0;">
+            ${r.tips.map(({p,t})=>`<li style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:1px solid #fde8a0;font-size:12px;line-height:1.55;color:#333;"><span style="width:8px;height:8px;border-radius:50%;background:${p==='h'?'#D94040':p==='m'?'#C07A12':'#1D9E75'};flex-shrink:0;margin-top:4px;display:inline-block;"></span><span>${t}</span></li>`).join('')}
+          </ul>
+        </div>
+      </div>
+      <div class="rpt-footer">
+        <div><div class="footer-brand">Tizzle</div><div class="footer-by">by Priyanka Barge</div></div>
+        <div class="footer-pg">Page 2 of 2</div>
+        <div class="footer-meta">Confidential · Generated for ${r.uname}</div>
+      </div>
+    </div>`;
+
+  window.print();
+}
+</script>
+</body>
+</html>
